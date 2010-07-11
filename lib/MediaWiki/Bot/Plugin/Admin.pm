@@ -7,7 +7,7 @@ use locale;
 use POSIX qw(locale_h);
 setlocale(LC_ALL, "en_US.UTF-8");
 
-our $VERSION = '0.1.1';
+our $VERSION = '3.1.0';
 
 =head1 NAME
 
@@ -356,8 +356,8 @@ sub protect {
     my $self    = shift;
     my $page    = shift;
     my $reason  = shift;
-    my $editlvl = shift || 'all'; # 'all'? Or 'sysop'
-    my $movelvl = shift || 'all';
+    my $editlvl = shift || 'sysop';
+    my $movelvl = shift || 'sysop';
     my $time    = shift || 'infinite';
     my $cascade = shift;
 
