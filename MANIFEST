@@ -1,15 +1,21 @@
+Changes
 INSTALL
 LICENSE
-Makefile.PL
 MANIFEST
+META.yml
+Makefile.PL
 README
-Changes
 lib/MediaWiki/Bot/Plugin/Admin.pm
-gpl.txt
+t/00-compile.t
 t/00_initialize.t
 t/01_delete.t
 t/02_protect.t
+t/03_block.t
 t/97_pod.t
 t/98_pod_coverage.t
-t/99_pod_kwalitee.t
-META.yml                                 Module meta-data (added by MakeMaker)
+t/author-critic.t
+t/release-distmeta.t
+t/release-eol.t
+t/release-kwalitee.t
+t/release-no-tabs.t
+t/release-pod-syntax.t
