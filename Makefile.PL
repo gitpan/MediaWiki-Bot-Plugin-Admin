@@ -12,7 +12,6 @@ my %WriteMakefileArgs = (
   'ABSTRACT' => 'A plugin to MediaWiki::Bot providing admin functions',
   'AUTHOR' => 'Dan Collins <en.wp.2t47@gmail.com>, Mike.lifeguard <mike.lifeguard@gmail.com>, patch and bug report contributors',
   'BUILD_REQUIRES' => {
-    'English' => '0',
     'File::Find' => '0',
     'File::Temp' => '0',
     'MediaWiki::Bot' => '0',
@@ -29,7 +28,7 @@ my %WriteMakefileArgs = (
     'Carp' => '0',
     'Exporter' => '0'
   },
-  'VERSION' => '3.2.0',
+  'VERSION' => '3.2.1',
   'test' => {
     'TESTS' => 't/*.t'
   }

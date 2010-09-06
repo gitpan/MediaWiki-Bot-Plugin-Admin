@@ -6,7 +6,7 @@ use warnings;
 #use diagnostics;
 use Carp;
 
-our $VERSION = '3.2.0';
+our $VERSION = '3.2.1';
 
 
 
@@ -310,7 +310,7 @@ MediaWiki::Bot::Plugin::Admin - A plugin to MediaWiki::Bot providing admin funct
 
 =head1 VERSION
 
-version 3.2.0
+version 3.2.1
 
 =head1 SYNOPSIS
 
