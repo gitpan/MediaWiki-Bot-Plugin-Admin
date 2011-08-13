@@ -6,12 +6,11 @@ use warnings;
 #use diagnostics;
 use Carp;
 
-our $VERSION = '3.2.1';
-
+our $VERSION = '3.3.0';
 
 
 use Exporter qw(import);
-our @EXPORT = qw(rollback delete undelete delete_archived_image block unblock protect unprotect transwiki_import);
+our @EXPORT = qw(rollback delete undelete delete_archived_image block unblock protect unprotect transwiki_import xml_import);
 
 
 sub rollback {
@@ -298,10 +297,22 @@ sub transwiki_import {
     return $res;
 }
 
+
+sub xml_import {
+    my $self     = shift;
+    my $filename = shift or die 'No filename given';
+
+    my $success = $self->{api}->edit({
+        action  => 'import',
+        xml     => [ $filename ],
+    });
+    return $self->_handle_api_error() unless $success;
+    return $success;
+}
+
 1;
 
-
-
+__END__
 =pod
 
 =head1 NAME
@@ -310,7 +321,7 @@ MediaWiki::Bot::Plugin::Admin - A plugin to MediaWiki::Bot providing admin funct
 
 =head1 VERSION
 
-version 3.2.1
+version 3.3.0
 
 =head1 SYNOPSIS
 
@@ -325,21 +336,30 @@ version 3.2.1
 
 =head1 DESCRIPTION
 
-A plugin to the MediaWiki::Bot framework to provide administrative functions to a bot.
-
-=head1 AUTHOR
-
-The Perlwikipedia team
+A plugin to the MediaWiki::Bot framework to provide administrative
+functions to a bot.
 
 =head1 METHODS
 
 =head2 import()
 
-Calling import from any module will, quite simply, transfer these subroutines into that module's namespace. This is possible from any module which is compatible with MediaWiki::Bot. Typically, you will C<use MediaWiki::Bot> and nothing else. Just use the methods, MediaWiki::Bot automatically imports plugins if found.
+Calling import from any module will, quite simply, transfer these
+subroutines into that module's namespace. This is possible from any
+module which is compatible with MediaWiki::Bot. Typically, you will
+C<use MediaWiki::Bot> and nothing else. Just use the methods,
+MediaWiki::Bot automatically imports plugins if found.
 
 =head2 rollback($pagename, $username[,$summary[,$markbot]])
 
-Uses rollback to revert to the last revision of $pagename not edited by the latest editor of that page. If $username is not the last editor of $pagename, you will get an error; that's why it is a I<very good idea> to set this. If you do not, the latest edit(s) will be rolled back, and you could end up rolling back something you didn't intend to. Therefore, $username should be considered B<required>. The remaining parameters are optional: $summary (to set a custom rollback edit summary), and $markbot (which marks both the rollback and the edits that were rolled back as bot edits).
+Uses rollback to revert to the last revision of $pagename not edited
+by the latest editor of that page. If $username is not the last editor
+of $pagename, you will get an error; that's why it is a I<very good
+idea> to set this. If you do not, the latest edit(s) will be rolled
+back, and you could end up rolling back something you didn't intend
+to. Therefore, $username should be considered B<required>. The
+remaining parameters are optional: $summary (to set a custom rollback
+edit summary), and $markbot (which marks both the rollback and the
+edits that were rolled back as bot edits).
 
     $bot->rollback("Linux", "Some Vandal");
     # OR
@@ -347,7 +367,8 @@ Uses rollback to revert to the last revision of $pagename not edited by the late
 
 =head2 delete($page[,$summary])
 
-Deletes the page with the specified summary. If you omit $summary, a generic one will be used.
+Deletes the page with the specified summary. If you omit $summary,
+a generic one will be used.
 
     my @pages = ('Junk page 1', 'Junk page 2', 'Junk page 3');
     foreach my $page (@pages) {
@@ -356,20 +377,24 @@ Deletes the page with the specified summary. If you omit $summary, a generic one
 
 =head2 undelete($page[,$summary])
 
-Undeletes $page with $summary. If you omit $summary, a generic one will be used.
+Undeletes $page with $summary. If you omit $summary, a generic one
+will be used.
 
     $bot->undelete($page);
 
 =head2 delete_archived_image($archivename, $summary)
 
-Deletes the specified revision of the image with the specified summary. A generic summary will be used if you omit $summary.
+Deletes the specified revision of the image with the specified summary.
+A generic summary will be used if you omit $summary.
 
     # Get the archivename somehow (from iiprop)
     $bot->delete_archived_image('20080606222744!Albert_Einstein_Head.jpg', 'test');
 
 =head2 block($options_hashref)
 
-Blocks the user with the specified options. All options optional except user and length. Anononly, autoblock, blockac, blockemail and blocktalk are true/false. Defaults to a generic summary, with all options disabled.
+Blocks the user with the specified options. All options optional except
+user and length. Anononly, autoblock, blockac, blockemail and blocktalk
+are true/false. Defaults to a generic summary, with all options disabled.
 
     $bot->block({
         user        => 'Vandal account 2',
@@ -391,16 +416,18 @@ Unblocks the user with the specified summary.
 
 =head2 unprotect($page, $reason)
 
-Unprotects a page. You can also set parameters for protect() such that the page is unprotected.
+Unprotects a page. You can also set parameters for protect() such that 
+the page is unprotected.
 
-my @obsolete_protections = ('Main Page', 'Project:Community Portal', 'Template:Tlx');
-foreach my $page (@obsolete_protections) {
-    $bot->unprotect($page, 'Removing old obsolete page protection');
-}
+    my @obsolete_protections = ('Main Page', 'Project:Community Portal', 'Template:Tlx');
+    foreach my $page (@obsolete_protections) {
+        $bot->unprotect($page, 'Removing old obsolete page protection');
+    }
 
 =head2 protect($page, $reason, $editlvl, $movelvl, $time, $cascade)
 
-Protects (or unprotects) the page. $editlvl and $movelvl may be 'all', 'autoconfirmed', or 'sysop'. $cascade is true/false.
+Protects (or unprotects) the page. $editlvl and $movelvl may be 'all',
+'autoconfirmed', or 'sysop'. $cascade is true/false.
 
 =head2 transwiki_import($options_hashref)
 
@@ -409,21 +436,33 @@ Do a I<transwiki> import of a page specified in the hashref.
 =over 4
 
 =item *
-prefix must be a valid interwiki on the wiki you're importing to. It specifies where to import from.
+prefix must be a valid interwiki on the wiki you're importing to. It
+specifies where to import from.
 
 =item *
 page is the title to import from the remote wiki, including namespace
 
 =item *
-ns is the namespace I<number> to import I<to>. For example, some wikis have a "Transwiki" namespace to import into where cleanup happens before pages are moved into the main namespace. This defaults to 0.
+ns is the namespace I<number> to import I<to>. For example, some wikis
+have a "Transwiki" namespace to import into where cleanup happens before
+pages are moved into the main namespace. This defaults to 0.
 
 =item *
-history specifies whether or not to include the full page history. Defaults to 1. In general, you should import the full history, but on very large page histories, this may not be possible. In such cases, try disabling this, or do an XML import.
+history specifies whether or not to include the full page history. Defaults
+to 1. In general, you should import the full history, but on very large page
+histories, this may not be possible. In such cases, try disabling this, or
+do an L<XML import|/xml_import>.
 
 =item *
 templates specifies whether or not to include templates. Defaults to 0;
 
 =back
+
+=head2 xml_import
+
+    $bot->xml_import($filename);
+
+Import an XML file to the wiki. Specify the filename of an XML dump.
 
 =head1 AUTHORS
 
@@ -445,7 +484,7 @@ patch and bug report contributors
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is Copyright (c) 2010 by the MediaWiki::Bot team <perlwikibot@googlegroups.com>.
+This software is Copyright (c) 2011 by the MediaWiki::Bot team <perlwikibot@googlegroups.com>.
 
 This is free software, licensed under:
 
@@ -453,5 +492,3 @@ This is free software, licensed under:
 
 =cut
 
-
-__END__

@@ -11,8 +11,10 @@ t/00_initialize.t
 t/01_delete.t
 t/02_protect.t
 t/03_block.t
+t/04_xml_import.t
 t/97_pod.t
 t/98_pod_coverage.t
+t/testfile.xml
 xt/author/critic.t
 xt/release/distmeta.t
 xt/release/eol.t

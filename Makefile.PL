@@ -2,9 +2,9 @@
 use strict;
 use warnings;
 
-BEGIN { require 5.006; }
+use 5.006;
 
-use ExtUtils::MakeMaker 6.31;
+use ExtUtils::MakeMaker 6.30;
 
 
 
@@ -18,7 +18,7 @@ my %WriteMakefileArgs = (
     'Test::More' => '0'
   },
   'CONFIGURE_REQUIRES' => {
-    'ExtUtils::MakeMaker' => '6.31'
+    'ExtUtils::MakeMaker' => '6.30'
   },
   'DISTNAME' => 'MediaWiki-Bot-Plugin-Admin',
   'EXE_FILES' => [],
@@ -28,7 +28,7 @@ my %WriteMakefileArgs = (
     'Carp' => '0',
     'Exporter' => '0'
   },
-  'VERSION' => '3.2.1',
+  'VERSION' => '3.3.0',
   'test' => {
     'TESTS' => 't/*.t'
   }
