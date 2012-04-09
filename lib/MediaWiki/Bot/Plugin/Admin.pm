@@ -5,12 +5,20 @@ use strict;
 use warnings;
 #use diagnostics;
 use Carp;
+use List::Compare;
 
-our $VERSION = '3.3.0';
+our $VERSION = '3.004000'; # VERSION
 
 
 use Exporter qw(import);
-our @EXPORT = qw(rollback delete undelete delete_archived_image block unblock protect unprotect transwiki_import xml_import);
+our @EXPORT = qw(
+    rollback
+    delete undelete delete_archived_image
+    block unblock
+    protect unprotect
+    transwiki_import xml_import
+    set_usergroups add_usergroups remove_usergroups
+);
 
 
 sub rollback {
@@ -44,7 +52,7 @@ sub delete {
         prop    => 'info|revisions',
         intoken => 'delete'
     });
-    my ($id, $data) = %{ $res->{query}->{pages} };
+    my $data = [ %{ $res->{query}->{pages} } ]->[1];
     my $edittoken = $data->{deletetoken};
 
     $res = $self->{api}->api({
@@ -72,7 +80,7 @@ sub undelete {
         drlimit => 1,
         drprop  => 'token',
     });
-    my $token = $token_results->{'query'}->{'deletedrevs'}->[0]->{'token'};
+    my $token = $token_results->{query}->{deletedrevs}->[0]->{token};
 
     my $res = $self->{api}->api({
         action  => 'undelete',
@@ -91,11 +99,11 @@ sub delete_archived_image {
     my $archive = shift;
     my $summary = shift || 'BOT: deleting old version of image by command';
 
-    my ($timestamp, $file) = split(m/!/, $archive);
+    my $file = [ split m/!/, $archive ]->[1];
 
     my ($token) = $self->_get_edittoken($file);
 
-    my $res = $self->{'api'}->api({
+    my $res = $self->{api}->api({
         action   => 'delete',
         title    => "File:$file",
         token    => $token,
@@ -110,7 +118,7 @@ sub delete_archived_image {
 
 
 sub block {
-    my $self       = shift;
+    my $self = shift;
     my $user;
     my $length;
     my $summary;
@@ -120,14 +128,14 @@ sub block {
     my $blockemail;
     my $blocktalk;
     if (ref $_[0] eq 'HASH') {
-        $user       = $_[0]->{'user'};
-        $length     = $_[0]->{'length'};
-        $summary    = $_[0]->{'summary'};
-        $anononly   = $_[0]->{'anononly'};
-        $autoblock  = $_[0]->{'autoblock'};
-        $blockac    = $_[0]->{'blockac'};
-        $blockemail = $_[0]->{'blockemail'};
-        $blocktalk  = $_[0]->{'blocktalk'};
+        $user       = $_[0]->{user};
+        $length     = $_[0]->{length};
+        $summary    = $_[0]->{summary};
+        $anononly   = $_[0]->{anononly};
+        $autoblock  = $_[0]->{autoblock};
+        $blockac    = $_[0]->{blockac};
+        $blockemail = $_[0]->{blockemail};
+        $blocktalk  = $_[0]->{blocktalk};
     }
     else {
         $user       = shift;
@@ -143,8 +151,8 @@ sub block {
     my $res;
     my $edittoken;
 
-    if ($self->{'blocktoken'}) {
-        $edittoken = $self->{'blocktoken'};
+    if ($self->{blocktoken}) {
+        $edittoken = $self->{blocktoken};
     }
     else {
         $res = $self->{api}->api({
@@ -153,9 +161,9 @@ sub block {
             prop    => 'info|revisions',
             intoken => 'block'
         });
-        my ($id, $data) = %{ $res->{query}->{pages} };
+        my $data = [ %{ $res->{query}->{pages} } ]->[1];
         $edittoken = $data->{blocktoken};
-        $self->{'blocktoken'} = $edittoken;
+        $self->{blocktoken} = $edittoken;
     }
     my $hash = {
         action => 'block',
@@ -186,30 +194,29 @@ sub unblock {
 
     my $res;
     my $edittoken;
-    if ($self->{'unblocktoken'}) {
-        $edittoken = $self->{'unblocktoken'};
+    if ($self->{unblocktoken}) {
+        $edittoken = $self->{unblocktoken};
     }
     else {
         $res = $self->{api}->api({
             action  => 'query',
             titles  => 'Main_Page',
             prop    => 'info|revisions',
-            intoken => 'unblock'
+            intoken => 'unblock',
         });
-        my ($id, $data) = %{ $res->{query}->{pages} };
+        my $data = [ %{ $res->{query}->{pages} } ]->[1];
         $edittoken = $data->{unblocktoken};
-        $self->{'unblocktoken'} = $edittoken;
+        $self->{unblocktoken} = $edittoken;
     }
 
     my $hash = {
         action => 'unblock',
         user   => $user,
-        token  => $edittoken
+        token  => $edittoken,
+        reason => $summary,
     };
     $res = $self->{api}->api($hash);
-    if (!$res) {
-        return $self->_handle_api_error();
-    }
+    return $self->_handle_api_error() unless $res;
 
     return $res;
 }
@@ -237,7 +244,7 @@ sub protect {
     $movelvl = 'all' if $movelvl eq '';
 
     if ($cascade and ($editlvl ne 'sysop' or $movelvl ne 'sysop')) {
-        carp "Can't set cascading unless both editlvl and movelvl are sysop." if $self->{'debug'};
+        carp "Can't set cascading unless both editlvl and movelvl are sysop." if $self->{debug};
     }
     my $res = $self->{api}->api({
         action  => 'query',
@@ -246,9 +253,8 @@ sub protect {
         intoken => 'protect'
     });
 
-    #use Data::Dumper;print STDERR Dumper($res);
-    my ($id, $data) = %{ $res->{'query'}->{'pages'} };
-    my $edittoken = $data->{'protecttoken'};
+    my $data = [ %{ $res->{query}->{pages} } ]->[1];
+    my $edittoken = $data->{protecttoken};
 
     $res = $self->{api}->api({
         action      => 'protect',
@@ -266,13 +272,13 @@ sub protect {
 
 sub transwiki_import {
     my $self = shift;
-    my $prefix      = $_[0]->{'prefix'} || 'w';
-    my $page        = $_[0]->{'page'};
-    my $namespace   = $_[0]->{'ns'} || 0;
-    my $history     = defined($_[0]->{'history'}) ? $_[0]->{'history'} : 1;
-    my $templates   = defined($_[0]->{'templates'}) ? $_[0]->{'templates'} : 0;
+    my $prefix      = $_[0]->{prefix} || 'w';
+    my $page        = $_[0]->{page};
+    my $namespace   = $_[0]->{ns} || 0;
+    my $history     = defined($_[0]->{history}) ? $_[0]->{history} : 1;
+    my $templates   = defined($_[0]->{templates}) ? $_[0]->{templates} : 0;
 
-    my $res = $self->{'api'}->api({
+    my $res = $self->{api}->api({
         action  => 'query',
         prop    => 'info',
         titles  => 'Main Page',
@@ -280,10 +286,10 @@ sub transwiki_import {
     });
     return $self->_handle_api_error() unless $res;
 
-    my ($id, $data) = %{ $res->{'query'}->{'pages'} };
-    my $importtoken = $data->{'importtoken'};
+    my $data = [ %{ $res->{query}->{pages} } ]->[1];
+    my $importtoken = $data->{importtoken};
 
-    $res = $self->{'api'}->api({
+    $res = $self->{api}->api({
         action          => 'import',
         token           => $importtoken,
         interwikisource => $prefix,
@@ -310,10 +316,116 @@ sub xml_import {
     return $success;
 }
 
+
+sub set_usergroups {
+    my $self    = shift;
+    my $user    = shift;
+    my $rights  = shift;
+    my $summary = shift;
+
+    $user =~ s/^User://;
+
+    unless (
+        exists $self->{userrightscache}
+        and $self->{userrightscache}
+        and $self->{userrightscache}->{user} eq $user
+    ) {
+        $self->usergroups($user);
+    }
+    my $compare = List::Compare->new({
+        lists => [ $self->{userrightscache}->{groups}, $rights ],
+        unsorted    => 1,
+    });
+    my %add    = map { $_ => 1 } $compare->get_complement;
+    my %remove = map { $_ => 1 } $compare->get_unique;
+    delete $add{ $_ }    for qw(* user autoconfirmed);
+    delete $remove{ $_ } for qw(* user autoconfirmed);
+
+    my $hash = {
+        action  => 'userrights',
+        user    => $user,
+        add     => join('|', keys %add),
+        remove  => join('|', keys %remove),
+        reason  => $summary,
+        token   => $self->{userrightscache}->{token},
+    };
+    my $res = $self->{api}->api($hash);
+    return $self->_handle_api_error() unless $res;
+
+    my %new_usergroups = map { $_ => 1 } @{ $self->{userrightscache}->{groups} };
+    delete $new_usergroups{ $_ } for @{ $res->{userrights}->{removed} };
+    $new_usergroups{ $_ } = 1 for @{ $res->{userrights}->{added} };
+    delete $self->{userrightscache};
+    return keys %new_usergroups;
+}
+
+
+sub add_usergroups {
+    my $self    = shift;
+    my $user    = shift;
+    my $rights  = shift;
+    my $summary = shift;
+
+    $user =~ s/^User://;
+
+    unless (
+        exists $self->{userrightscache}
+        and exists $self->{userrightscache}->{user}
+        and $self->{userrightscache}->{user} eq $user
+    ) {
+        $self->usergroups($user);
+    }
+
+    my $res = $self->{api}->api({
+        action  => 'userrights',
+        user    => $user,
+        add     => @$rights,
+        reason  => $summary,
+        token   => $self->{userrightscache}->{token},
+    });
+    return $self->_handle_api_error() unless $res;
+
+    delete $self->{userrightscache};
+    return @{ $res->{userrights}->{added} };
+}
+
+
+
+sub remove_usergroups {
+    my $self    = shift;
+    my $user    = shift;
+    my $rights  = shift;
+    my $summary = shift;
+
+    $user =~ s/^User://;
+
+    unless (
+        exists $self->{userrightscache}
+        and exists $self->{userrightscache}->{user}
+        and $self->{userrightscache}->{user} eq $user
+    ) {
+        $self->usergroups($user);
+    }
+
+    my $res = $self->{api}->api({
+        action  => 'userrights',
+        user    => $user,
+        remove  => @$rights,
+        reason  => $summary,
+        token   => $self->{userrightscache}->{token},
+    });
+    return $self->_handle_api_error() unless $res;
+
+    delete $self->{userrightscache};
+    return @{ $res->{userrights}->{removed} };
+}
+
 1;
 
 __END__
 =pod
+
+=encoding utf-8
 
 =head1 NAME
 
@@ -321,7 +433,7 @@ MediaWiki::Bot::Plugin::Admin - A plugin to MediaWiki::Bot providing admin funct
 
 =head1 VERSION
 
-version 3.3.0
+version 3.004000
 
 =head1 SYNOPSIS
 
@@ -464,6 +576,52 @@ templates specifies whether or not to include templates. Defaults to 0;
 
 Import an XML file to the wiki. Specify the filename of an XML dump.
 
+=head2 set_usergroups
+
+Sets the user's group membership to the given list. You cannot change membership in
+*, user, or autoconfirmed, so you don't need to list them. There may also be other
+limits on which groups you can set/unset on a given wiki with a given account which
+may result in an error. In an error condition, it is undefined whether any group
+membership changes are made.
+
+The list returned is the user's new group membership.
+
+    $bot->set_usergroups('Mike.lifeguard', ['sysop'], "He deserves it");
+
+=head2 add_usergroups
+
+Add the user to the specified usergroups:
+
+    $bot->add_usergroups('Mike.lifeguard', ['sysop', 'editor'], "for fun");
+
+Returns the list of added usergroups, not the full group membership list like set_usergroups does.
+
+=head2 remove_usergroups
+
+Revoke the user's membership in the listed groups:
+
+    $bot->remove_usergroups('Mike.lifeguard', ['sysop', 'editor'], "Danger to himself & others");
+
+Returns the list of removed groups, not the full group membership list like set_usergroups does.
+
+=head1 AVAILABILITY
+
+The project homepage is L<https://metacpan.org/module/MediaWiki::Bot::Plugin::Admin>.
+
+The latest version of this module is available from the Comprehensive Perl
+Archive Network (CPAN). Visit L<http://www.perl.com/CPAN/> to find a CPAN
+site near you, or see L<https://metacpan.org/module/MediaWiki::Bot::Plugin::Admin/>.
+
+=head1 SOURCE
+
+The development version is on github at L<http://github.com/MediaWiki-Bot/MediaWiki-Bot-Plugin-Admin>
+and may be cloned from L<git://github.com/MediaWiki-Bot/MediaWiki-Bot-Plugin-Admin.git>
+
+=head1 BUGS AND LIMITATIONS
+
+You can make new bug reports, and view existing ones, through the
+web interface at L<https://github.com/MediaWiki-Bot/MediaWiki-Bot-Plugin-Admin/issues>.
+
 =head1 AUTHORS
 
 =over 4
@@ -484,7 +642,7 @@ patch and bug report contributors
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is Copyright (c) 2011 by the MediaWiki::Bot team <perlwikibot@googlegroups.com>.
+This software is Copyright (c) 2012 by the MediaWiki::Bot team <perlwikibot@googlegroups.com>.
 
 This is free software, licensed under:
 

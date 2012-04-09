@@ -9,28 +9,33 @@ use ExtUtils::MakeMaker 6.30;
 
 
 my %WriteMakefileArgs = (
-  'ABSTRACT' => 'A plugin to MediaWiki::Bot providing admin functions',
-  'AUTHOR' => 'Dan Collins <en.wp.2t47@gmail.com>, Mike.lifeguard <mike.lifeguard@gmail.com>, patch and bug report contributors',
-  'BUILD_REQUIRES' => {
-    'File::Find' => '0',
-    'File::Temp' => '0',
-    'MediaWiki::Bot' => '0',
-    'Test::More' => '0'
+  "ABSTRACT" => "A plugin to MediaWiki::Bot providing admin functions",
+  "AUTHOR" => "Dan Collins <en.wp.2t47\@gmail.com>, Mike.lifeguard <mike.lifeguard\@gmail.com>, patch and bug report contributors",
+  "BUILD_REQUIRES" => {
+    "File::Find" => 0,
+    "File::Temp" => 0,
+    "MediaWiki::Bot" => 0,
+    "Module::Build" => "0.3601",
+    "Test::More" => "0.96"
   },
-  'CONFIGURE_REQUIRES' => {
-    'ExtUtils::MakeMaker' => '6.30'
+  "CONFIGURE_REQUIRES" => {
+    "ExtUtils::MakeMaker" => "6.30",
+    "Module::Build" => "0.3601"
   },
-  'DISTNAME' => 'MediaWiki-Bot-Plugin-Admin',
-  'EXE_FILES' => [],
-  'LICENSE' => 'gpl',
-  'NAME' => 'MediaWiki::Bot::Plugin::Admin',
-  'PREREQ_PM' => {
-    'Carp' => '0',
-    'Exporter' => '0'
+  "DISTNAME" => "MediaWiki-Bot-Plugin-Admin",
+  "EXE_FILES" => [],
+  "LICENSE" => "gpl",
+  "NAME" => "MediaWiki::Bot::Plugin::Admin",
+  "PREREQ_PM" => {
+    "Carp" => 0,
+    "Exporter" => 0,
+    "List::Compare" => 0,
+    "strict" => 0,
+    "warnings" => 0
   },
-  'VERSION' => '3.3.0',
-  'test' => {
-    'TESTS' => 't/*.t'
+  "VERSION" => "3.004000",
+  "test" => {
+    "TESTS" => "t/*.t"
   }
 );
 

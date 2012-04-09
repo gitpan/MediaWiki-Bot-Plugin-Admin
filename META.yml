@@ -8,18 +8,30 @@ build_requires:
   File::Find: 0
   File::Temp: 0
   MediaWiki::Bot: 0
-  Test::More: 0
+  Module::Build: 0.3601
+  Test::More: 0.96
 configure_requires:
   ExtUtils::MakeMaker: 6.30
+  Module::Build: 0.3601
 dynamic_config: 0
-generated_by: 'Dist::Zilla version 4.200015, CPAN::Meta::Converter version 2.110930'
+generated_by: 'Dist::Zilla version 4.300012, CPAN::Meta::Converter version 2.120900'
 license: gpl
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
   version: 1.4
 name: MediaWiki-Bot-Plugin-Admin
+no_index:
+  directory:
+    - corpus
 requires:
   Carp: 0
   Exporter: 0
+  List::Compare: 0
   perl: 5.006
-version: 3.3.0
+  strict: 0
+  warnings: 0
+resources:
+  bugtracker: https://github.com/MediaWiki-Bot/MediaWiki-Bot-Plugin-Admin/issues
+  homepage: https://metacpan.org/module/MediaWiki::Bot::Plugin::Admin
+  repository: git://github.com/MediaWiki-Bot/MediaWiki-Bot-Plugin-Admin.git
+version: 3.004000
